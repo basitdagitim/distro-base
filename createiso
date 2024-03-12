@@ -57,7 +57,7 @@ $rootfs/bin/bps -ri util-linux $rootfs
 
 for paket in libpcre2 libselinux libsepol libsemanage mcstrans attr busybox \
 		readline ncurses \bash kmod eudev util-linux \grep \sed \
-		grub e2fsprogs libarchive xzinitramfs-tools \gzip \
+		grub e2fsprogs libarchive xz initramfs-tools \gzip \
 		coreutils acl gmp findutils openrc audit pam libcap \
 		zlib zstd libxml2 brotli linux-image live-boot live-config \
 		shadow parted dosfstools
