@@ -8,7 +8,7 @@ on:
 
 jobs:
     compile:
-        name: Basitdagitim
+        name: BasitDagitim
         runs-on: ubuntu-latest
         steps:
           - name: Check out the repo
