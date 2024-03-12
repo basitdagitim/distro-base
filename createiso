@@ -1,0 +1,115 @@
+#!/bin/bash
+set -x
+if which apt &>/dev/null && [[ -d /var/lib/dpkg && -d /etc/apt ]] ; then
+    apt-get update
+    echo "işlem başladı....."
+    apt install xorriso grub-pc-bin grub-efi mtools make python3 dosfstools e2fsprogs squashfs-tools python3-yaml gcc wget curl unzip xz-utils debootstrap git erofs-utils zstd -y
+fi
+apt-get install git devscripts equivs -y
+#------------------------------------------------------------------------------------
+rootfs="/root/distro/rootfs"
+#rm -rf distro/iso
+#rm -rf $rootfs
+mkdir -p /root/distro/rootfs
+mkdir -p $rootfs/bin
+#mkdir -p distro/rootfs
+#export PATH=/bbin:$PATH
+cp busybox $rootfs/bin/busybox
+cd $rootfs/bin/
+ln -s busybox cpio
+#busybox --install -s ./
+cd $rootfs/
+#cd distro/rootfs/
+mkdir  -p var run dev sys proc etc tmp/bps/kur
+bash -c "echo '127.0.0.1 basitdagitim' >> $rootfs/etc/hosts"
+bash -c "echo 'basitdagitim' > $rootfs/etc/hostname"
+bash -c "echo 'nameserver 8.8.8.8' > $rootfs/etc/resolv.conf"
+
+### system chroot  bind/mount
+for i in dev dev/pts proc sys; do mount -o bind /$i $rootfs/$i; done
+### manuel bps-tools install
+$rootfs/bin/busybox wget -O $rootfs/tmp/base-file-1.0.bps https://github.com/basitdagitim/bps-binary-packages/raw/master/sys/base/base-file/base-file-1.0.bps 1>$rootfs/dev/null 2>$rootfs/dev/null
+$rootfs/bin/busybox tar -xf $rootfs/tmp/base-file-1.0.bps -C $rootfs/tmp/bps/kur
+$rootfs/bin/busybox tar -xf $rootfs/tmp/bps/kur/rootfs.tar.xz -C $rootfs
+
+#paket adresi ekleniyor
+$rootfs/bin/busybox mkdir -p $rootfs/etc/bps
+echo "basitdagitim/bps-binary-packages">$rootfs/etc/bps/sources.list
+echo "anadolulinux/lfs-binary-packages">>$rootfs/etc/bps/sources.list
+### installing bps package in rootfs
+$rootfs/bin/bps -u $rootfs
+echo root:x:0:0:root:/root:/bin/sh > $rootfs/etc/passwd 
+
+$rootfs/bin/bps -ri glibc $rootfs
+$rootfs/bin/bps -ri readline $rootfs
+$rootfs/bin/bps -ri ncurses $rootfs
+$rootfs/bin/bps -ri \bash $rootfs
+$rootfs/bin/bps -ri openssl $rootfs
+$rootfs/bin/bps -ri acl $rootfs
+$rootfs/bin/bps -ri attr $rootfs
+$rootfs/bin/bps -ri libcap $rootfs
+$rootfs/bin/bps -ri gmp $rootfs
+$rootfs/bin/bps -ri \grep $rootfs
+$rootfs/bin/bps -ri \sed $rootfs
+$rootfs/bin/bps -ri libpcre2 $rootfs
+$rootfs/bin/bps -ri coreutils $rootfs
+$rootfs/bin/bps -ri util-linux $rootfs
+
+for paket in libpcre2 libselinux libsepol libsemanage mcstrans attr busybox \
+		readline ncurses \bash kmod eudev util-linux \grep \sed \
+		grub e2fsprogs libarchive xzinitramfs-tools \gzip \
+		coreutils acl gmp findutils openrc audit pam libcap \
+		zlib zstd libxml2 brotli linux-image live-boot live-config \
+		shadow parted dosfstools
+		#x11-base-base x11-libs-base x11-driver-base font-base libbsd mesa freetype dbus openssh xinit expat libmd dialog
+		# curl openssl 
+do 
+chroot $rootfs /bin/bps -i $paket; 
+done
+
+
+### update-initrd
+fname=$(basename $rootfs/boot/config*)
+kversion=${fname:7}
+mv $rootfs/boot/config* $rootfs/boot/config-$kversion
+cp $rootfs/boot/config-$kversion $rootfs/etc/kernel-config
+
+chroot $rootfs update-initramfs -u -k $kversion
+
+#### system chroot umount
+for dir in dev dev/pts proc sys ; do    while umount -lf -R $rootfs/$dir 2>/dev/null ; do true; done done
+
+#************************iso *********************************
+mkdir -p /root/distro/iso
+mkdir -p /root/distro/iso/boot
+mkdir -p /root/distro/iso/boot/grub
+mkdir -p /root/distro/iso/live || true
+
+#### Copy kernel and initramfs (Debian/Devuan)
+
+cp -pf $rootfs/boot/initrd.img-* /root/distro/iso/boot/initrd.img
+cp -pf $rootfs/boot/vmlinuz-* /root/distro/iso/boot/vmlinuz
+rm -rf $rootfs/boot
+#### Create squashfs
+mksquashfs $rootfs /root/distro/filesystem.squashfs -comp xz -wildcards
+mv /root/distro/filesystem.squashfs /root/distro/iso/live/filesystem.squashfs
+
+#### Write grub.cfg
+
+echo 'menuentry "Disk GNU/Linux 64-bit" --class liveiso  {' > /root/distro/iso/boot/grub/grub.cfg
+echo '    linux /boot/vmlinuz boot=live net.ifnames=0 biosdevname=0 init=/bin/initdisk ' >> /root/distro/iso/boot/grub/grub.cfg
+echo '    initrd /boot/initrd.img' >> /root/distro/iso/boot/grub/grub.cfg
+echo '}' >> /root/distro/iso/boot/grub/grub.cfg
+
+echo 'menuentry "Kur iki Part GNU/Linux 64-bit" --class liveiso  {' >> /root/distro/iso/boot/grub/grub.cfg
+echo '    linux /boot/vmlinuz boot=live init=/bin/kur2 ' >> /root/distro/iso/boot/grub/grub.cfg
+echo '    initrd /boot/initrd.img' >> /root/distro/iso/boot/grub/grub.cfg
+echo '}' >> /root/distro/iso/boot/grub/grub.cfg
+
+echo 'menuentry "Kur Tek Part GNU/Linux 64-bit" --class liveiso  {' >> /root/distro/iso/boot/grub/grub.cfg
+echo '    linux /boot/vmlinuz boot=live init=/bin/kur1 ' >> /root/distro/iso/boot/grub/grub.cfg
+echo '    initrd /boot/initrd.img' >> /root/distro/iso/boot/grub/grub.cfg
+echo '}' >> /root/distro/iso/boot/grub/grub.cfg
+
+grub-mkrescue /root/distro/iso/ -o /root/distro/distro.iso
+
