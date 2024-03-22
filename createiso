@@ -56,11 +56,12 @@ $rootfs/bin/bps -ri coreutils $rootfs
 $rootfs/bin/bps -ri util-linux $rootfs
 
 for paket in libpcre2 libselinux libsepol libsemanage mcstrans attr busybox \
-		readline ncurses \bash kmod eudev util-linux \grep \sed \
+		readline ncurses \bash kmod eudev util-linux \grep \gawk \sed \
 		grub e2fsprogs libarchive xz initramfs-tools \gzip \
 		coreutils acl gmp findutils openrc audit pam libcap \
 		zlib zstd libxml2 brotli linux-image live-boot live-config \
-		shadow parted dosfstools
+		shadow parted dosfstools\
+		curl openssl openssl-1.1 openssh expat libmd dialog
 		#x11-base-base x11-libs-base x11-driver-base font-base libbsd mesa freetype dbus openssh xinit expat libmd dialog
 		# curl openssl 
 do 
