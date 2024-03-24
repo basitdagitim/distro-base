@@ -68,7 +68,7 @@ for paket in libpcre2 libselinux libsepol libsemanage mcstrans attr busybox \
 		#x11-base-base x11-libs-base x11-driver-base font-base libbsd mesa freetype dbus openssh xinit expat libmd dialog
 		# curl openssl 
 do 
-$chroot $rootfs /bin/bps -i $paket; 
+chroot $rootfs /bin/bps -i $paket; 
 #$rootfs/bin/bps -i  $paket $rootfs
 done
 
