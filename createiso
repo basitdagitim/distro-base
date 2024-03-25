@@ -10,7 +10,7 @@ apt-get install git devscripts equivs -y
 #------------------------------------------------------------------------------------
 rootfs="/root/distro/rootfs"
 #rm -rf distro/iso
-#rm -rf $rootfs
+rm -rf $rootfs
 mkdir -p /root/distro/rootfs
 mkdir -p $rootfs/bin
 #mkdir -p distro/rootfs
