@@ -8,8 +8,8 @@ fi
 
 apt-get install git devscripts equivs -y
 #------------------------------------------------------------------------------------
-rootfs="/tmp/distro/rootfs"
-distro="/tmp/distro"
+rootfs="/root/distro/rootfs"
+distro="/root/distro"
 #rm -rf distro/iso
 rm -rf $rootfs
 mkdir -p /tmp/distro/rootfs
