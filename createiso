@@ -8,10 +8,11 @@ fi
 
 apt-get install git devscripts equivs -y
 #------------------------------------------------------------------------------------
-rootfs="/root/distro/rootfs"
+rootfs="/tmp/distro/rootfs"
+distro="/tmp/distro"
 #rm -rf distro/iso
 rm -rf $rootfs
-mkdir -p /root/distro/rootfs
+mkdir -p /tmp/distro/rootfs
 mkdir -p $rootfs/bin
 #mkdir -p distro/rootfs
 #export PATH=/bbin:$PATH
@@ -40,8 +41,8 @@ echo "anadolulinux/lfs-binary-packages">>$rootfs/etc/bps/sources.list
 ### installing bps package in rootfs
 $rootfs/bin/bps -u $rootfs
 #**********************************************************************
-echo root:x:0:0:root:/root:/bin/sh > /hedef/etc/passwd 
-chroot /hedef chmod 755 /etc/passwd
+echo root:x:0:0:root:/root:/bin/sh > $rootfs/etc/passwd 
+chmod 755 $rootfs/etc/passwd
 #**********************************************************************
 $rootfs/bin/bps -ri glibc $rootfs
 $rootfs/bin/bps -ri readline $rootfs
@@ -88,36 +89,36 @@ chroot $rootfs update-initramfs -u -k $kversion
 for dir in dev dev/pts proc sys ; do    while umount -lf -R $rootfs/$dir 2>/dev/null ; do true; done done
 
 #************************iso *********************************
-mkdir -p /root/distro/iso
-mkdir -p /root/distro/iso/boot
-mkdir -p /root/distro/iso/boot/grub
-mkdir -p /root/distro/iso/live || true
+mkdir -p $distro/iso
+mkdir -p $distro/iso/boot
+mkdir -p $distro/iso/boot/grub
+mkdir -p $distro/iso/live || true
 
 #### Copy kernel and initramfs (Debian/Devuan)
 
-cp -pf $rootfs/boot/initrd.img-* /root/distro/iso/boot/initrd.img
-cp -pf $rootfs/boot/vmlinuz-* /root/distro/iso/boot/vmlinuz
+cp -pf $rootfs/boot/initrd.img-* $distro/iso/boot/initrd.img
+cp -pf $rootfs/boot/vmlinuz-* $distro/iso/boot/vmlinuz
 rm -rf $rootfs/boot
 #### Create squashfs
-mksquashfs $rootfs /root/distro/filesystem.squashfs -comp xz -wildcards
-mv /root/distro/filesystem.squashfs /root/distro/iso/live/filesystem.squashfs
+mksquashfs $rootfs $distro/filesystem.squashfs -comp xz -wildcards
+mv $distro/filesystem.squashfs $distro/iso/live/filesystem.squashfs
 
 #### Write grub.cfg
 
-echo 'menuentry "Disk GNU/Linux 64-bit" --class liveiso  {' > /root/distro/iso/boot/grub/grub.cfg
-echo '    linux /boot/vmlinuz boot=live net.ifnames=0 biosdevname=0 init=/bin/initdisk ' >> /root/distro/iso/boot/grub/grub.cfg
-echo '    initrd /boot/initrd.img' >> /root/distro/iso/boot/grub/grub.cfg
-echo '}' >> /root/distro/iso/boot/grub/grub.cfg
+echo 'menuentry "Disk GNU/Linux 64-bit" --class liveiso  {' > $distro/iso/boot/grub/grub.cfg
+echo '    linux /boot/vmlinuz boot=live net.ifnames=0 biosdevname=0 init=/bin/initdisk ' >> $distro/iso/boot/grub/grub.cfg
+echo '    initrd /boot/initrd.img' >> $distro/iso/boot/grub/grub.cfg
+echo '}' >> $distro/iso/boot/grub/grub.cfg
 
-echo 'menuentry "Kur iki Part GNU/Linux 64-bit" --class liveiso  {' >> /root/distro/iso/boot/grub/grub.cfg
-echo '    linux /boot/vmlinuz boot=live init=/bin/kur2 ' >> /root/distro/iso/boot/grub/grub.cfg
-echo '    initrd /boot/initrd.img' >> /root/distro/iso/boot/grub/grub.cfg
-echo '}' >> /root/distro/iso/boot/grub/grub.cfg
+echo 'menuentry "Kur iki Part GNU/Linux 64-bit" --class liveiso  {' >> $distro/iso/boot/grub/grub.cfg
+echo '    linux /boot/vmlinuz boot=live init=/bin/kur2 ' >> $distro/iso/boot/grub/grub.cfg
+echo '    initrd /boot/initrd.img' >> $distro/iso/boot/grub/grub.cfg
+echo '}' >> $distro/iso/boot/grub/grub.cfg
 
-echo 'menuentry "Kur Tek Part GNU/Linux 64-bit" --class liveiso  {' >> /root/distro/iso/boot/grub/grub.cfg
-echo '    linux /boot/vmlinuz boot=live init=/bin/kur1 ' >> /root/distro/iso/boot/grub/grub.cfg
-echo '    initrd /boot/initrd.img' >> /root/distro/iso/boot/grub/grub.cfg
-echo '}' >> /root/distro/iso/boot/grub/grub.cfg
+echo 'menuentry "Kur Tek Part GNU/Linux 64-bit" --class liveiso  {' >> $distro/iso/boot/grub/grub.cfg
+echo '    linux /boot/vmlinuz boot=live init=/bin/kur1 ' >> $distro/iso/boot/grub/grub.cfg
+echo '    initrd /boot/initrd.img' >> $distro/iso/boot/grub/grub.cfg
+echo '}' >> $distro/iso/boot/grub/grub.cfg
 
-grub-mkrescue /root/distro/iso/ -o /root/distro/distro.iso
+grub-mkrescue $distro/iso/ -o $distro/distro.iso
 
