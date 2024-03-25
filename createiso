@@ -38,8 +38,10 @@ echo "basitdagitim/bps-binary-packages">$rootfs/etc/bps/sources.list
 echo "anadolulinux/lfs-binary-packages">>$rootfs/etc/bps/sources.list
 ### installing bps package in rootfs
 $rootfs/bin/bps -u $rootfs
-echo root:x:0:0:root:/root:/bin/sh > $rootfs/etc/passwd 
-
+#**********************************************************************
+echo root:x:0:0:root:/root:/bin/sh > /hedef/etc/passwd 
+chroot /hedef chmod 755 /etc/passwd
+#**********************************************************************
 $rootfs/bin/bps -ri glibc $rootfs
 $rootfs/bin/bps -ri readline $rootfs
 $rootfs/bin/bps -ri ncurses $rootfs
